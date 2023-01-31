@@ -4,10 +4,10 @@ const express = require('express')
 const app = express()
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
-    },
+    // ssl: {
+    //   require: true,
+    //   rejectUnauthorized: false,
+    // },
   },
 })
 class Blog extends Model {}
@@ -43,23 +43,51 @@ Blog.init(
     modelName: 'blog',
   }
 )
-
-app.get('/api/notes', async (req, res) => {
-  const notes = await sequelize.query('SELECT * FROM notes', {
+Blog.sync()
+app.get('/api/blogs', async (req, res) => {
+  const blogs = await sequelize.query('SELECT * FROM blogs', {
     type: QueryTypes.SELECT,
   })
-  res.json(notes)
+  res.json(blogs)
 })
 
-app.post('/api/notes', async (req, res) => {
+app.put('/api/blogs/:id', async (req, res) => {
+  const blog = await Blog.findByPk(req.params.id)
+  if (blog) {
+    res.json(blog)
+  } else {
+    res.json(404).end()
+  }
+})
+
+app.put('/api/blogs/:id', async (req, res) => {
+  const blog = await Blog.findByPk(req.params.id)
+  if (blog) {
+    blog.important = req.body.important
+    await blog.save()
+    res.json(blog)
+  } else {
+    res.json(404).end()
+  }
+})
+app.post('/api/blogs', async (req, res) => {
   try {
-    const note = await Note.create(req.body)
-    return res.json(note)
+    const blog = await Blog.create(req.body)
+    return res.json(blog)
   } catch (error) {
     return res.status(400).json({ error })
   }
 })
 
+app.delete('/api/blogs/:id', async (req, res) => {
+  try {
+    const blog = await Blog.findByPk(req.params.id)
+    await blog.delete()
+    return res.json(blog)
+  } catch (error) {
+    return res.status(400).json({ error })
+  }
+})
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
