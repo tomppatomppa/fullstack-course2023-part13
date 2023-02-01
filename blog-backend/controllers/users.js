@@ -4,7 +4,7 @@ const { User } = require('../models')
 
 router.get('/', async (req, res) => {
   const allUsers = await User.findAll({})
-  res.json(allUsers)
+  res.json(allUsers) //
 })
 
 router.put('/:username', async (req, res) => {
