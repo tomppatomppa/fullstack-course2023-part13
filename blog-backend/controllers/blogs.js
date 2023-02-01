@@ -19,12 +19,20 @@ const tokenExtractor = (req, res, next) => {
 }
 
 const blogFinder = async (req, res, next) => {
-  req.blog = await Blog.findByPk(req.params.id)
+  req.blog = await Blog.findByPk(req.params.id, {
+    include: {
+      model: User,
+    },
+  })
   next()
 }
 
 router.get('/', async (req, res) => {
-  const blogs = await Blog.findAll()
+  const blogs = await Blog.findAll({
+    include: {
+      model: User,
+    },
+  })
   res.json(blogs)
 })
 
@@ -52,9 +60,18 @@ router.post('/', tokenExtractor, async (req, res) => {
   }
 })
 
-router.delete('/:id', blogFinder, async (req, res) => {
-  await req.blog.destroy()
-  return res.json(`Removed blog with id ${req.params.id}`)
+router.delete('/:id', tokenExtractor, async (req, res) => {
+  const user = await User.findByPk(req.decodedToken.id)
+  const blogToBeDeleted = await Blog.findByPk(req.body.id, {
+    include: {
+      model: User,
+    },
+  })
+  if (!blogToBeDeleted) res.json('no blog found')
+  if (user.toString() === blogToBeDeleted.user.toString()) {
+    await blogToBeDeleted.destroy()
+    res.json('deleted blog')
+  }
 })
 
 module.exports = router
