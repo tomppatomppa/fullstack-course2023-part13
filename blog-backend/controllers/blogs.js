@@ -8,9 +8,7 @@ const blogFinder = async (req, res, next) => {
 }
 
 router.get('/', async (req, res) => {
-  const blogs = await sequelize.query('SELECT * FROM blogs', {
-    type: QueryTypes.SELECT,
-  })
+  const blogs = await Blog.findAll()
   res.json(blogs)
 })
 
@@ -22,12 +20,11 @@ router.get('/:id', blogFinder, async (req, res) => {
   }
 })
 
-router.put('/:id', async (req, res) => {
-  const blog = await Blog.findByPk(req.params.id)
-  if (blog) {
-    blog.important = req.body.important
-    await blog.save()
-    res.json(blog)
+router.put('/:id', blogFinder, async (req, res) => {
+  if (req.blog) {
+    req.blog.likes = req.body.likes
+    await req.blog.save()
+    res.json(req.blog)
   } else {
     res.json(404).end()
   }
@@ -42,12 +39,11 @@ router.post('/', async (req, res) => {
   }
 })
 
-router.delete('/:id', async (req, res) => {
-  try {
-    const blog = await Blog.findByPk(req.params.id)
-    await blog.destroy()
-    return res.json(blog)
-  } catch (error) {
+router.delete('/:id', blogFinder, async (req, res) => {
+  if (req.blog) {
+    await req.blog.destroy()
+    return res.json(req.blog)
+  } else {
     return res.status(400).json({ error })
   }
 })
