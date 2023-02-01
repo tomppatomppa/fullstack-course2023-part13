@@ -3,12 +3,8 @@ const router = require('express').Router()
 const { User } = require('../models')
 
 router.get('/', async (req, res) => {
-  try {
-    const allUsers = await User.findAll({})
-    res.json(allUsers)
-  } catch (e) {
-    console.log(e)
-  }
+  const allUsers = await User.findAll({})
+  res.json(allUsers)
 })
 
 router.put('/:username', async (req, res) => {
