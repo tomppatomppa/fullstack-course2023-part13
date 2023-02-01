@@ -64,7 +64,7 @@ router.delete('/:id', tokenExtractor, async (req, res) => {
   const user = await User.findByPk(req.decodedToken.id)
   const blogToBeDeleted = await Blog.findByPk(req.body.id, {
     include: {
-      model: User,
+      model: Blog,
     },
   })
   if (!blogToBeDeleted) res.json('no blog found')
