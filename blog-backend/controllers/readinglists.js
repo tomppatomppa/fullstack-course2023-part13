@@ -27,6 +27,25 @@ router.get('/', async (req, res) => {
   return res.json(allLists)
 })
 
+router.put('/:id', tokenExtractor, async (req, res) => {
+  const readingListItem = await ReadingList.findOne({
+    where: { blogId: req.params.id },
+  })
+
+  if (!readingListItem) {
+    return res.json({
+      error: `Readlist item with the id ${req.params.id} doesn't exist`,
+    })
+  }
+
+  if (readingListItem.userId === req.decodedToken.id) {
+    readingListItem.read = req.body.read
+    await readingListItem.save()
+    return res.json(readingListItem)
+  }
+
+  return res.json({ error: 'No permission to modify' })
+})
 router.post('/', tokenExtractor, async (req, res) => {
   const user = await User.findByPk(req.decodedToken.id)
   const blog = await Blog.findByPk(req.body.blogId)
