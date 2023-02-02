@@ -8,7 +8,7 @@ router.get('/', async (req, res) => {
       model: Blog,
     },
   })
-  res.json(allUsers) //
+  res.json(allUsers)
 })
 
 router.get('/:id', async (req, res) => {
@@ -19,12 +19,14 @@ router.get('/:id', async (req, res) => {
   })
   res.json(user)
 })
+
 router.put('/:username', async (req, res) => {
   const userExists = await User.findOne({ username: req.params.username })
   userExists.username = req.body.username
   const updatedUsername = await userExists.save()
   res.json(updatedUsername)
 })
+
 router.post('/', async (req, res) => {
   const createdUser = await User.create(req.body)
 
