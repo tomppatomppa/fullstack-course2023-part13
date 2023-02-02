@@ -1,9 +1,7 @@
 const router = require('express').Router()
-const jwt = require('jsonwebtoken')
 
-const { SECRET } = require('../util/config')
-const { Blog, User } = require('../models')
-const { Op, Sequelize } = require('sequelize')
+const { Blog } = require('../models')
+const { Sequelize } = require('sequelize')
 
 router.get('/', async (req, res) => {
   const authors = await Blog.findAll({
