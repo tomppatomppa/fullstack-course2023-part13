@@ -1,6 +1,5 @@
 const router = require('express').Router()
 
-const { Op } = require('sequelize')
 const { User, Blog, ReadingList } = require('../models')
 
 router.get('/', async (req, res) => {
@@ -42,7 +41,14 @@ router.get('/:id', async (req, res) => {
 })
 
 router.put('/:username', async (req, res) => {
-  const userExists = await User.findOne({ username: req.params.username })
+  const userExists = await User.findOne({
+    where: { username: req.params.username },
+  })
+
+  if (req.decodedToken.id !== userExists.id) {
+    return res.status(401).json('Unauthorized request')
+  }
+
   userExists.username = req.body.username
   const updatedUsername = await userExists.save()
   res.json(updatedUsername)

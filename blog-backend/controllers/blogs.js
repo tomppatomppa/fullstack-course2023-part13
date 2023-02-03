@@ -1,23 +1,7 @@
 const router = require('express').Router()
-const jwt = require('jsonwebtoken')
 
-const { SECRET } = require('../util/config')
 const { Blog, User } = require('../models')
 const { Op } = require('sequelize')
-
-const tokenExtractor = (req, res, next) => {
-  const authorization = req.get('authorization')
-  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    try {
-      req.decodedToken = jwt.verify(authorization.substring(7), SECRET)
-    } catch {
-      return res.status(401).json({ error: 'token invalid' })
-    }
-  } else {
-    return res.status(401).json({ error: 'token missing' })
-  }
-  next()
-}
 
 const blogFinder = async (req, res, next) => {
   req.blog = await Blog.findByPk(req.params.id, {
@@ -66,7 +50,7 @@ router.put('/:id', blogFinder, async (req, res) => {
   res.json(likesUpdatedBlog)
 })
 
-router.post('/', tokenExtractor, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const user = await User.findByPk(req.decodedToken.id)
     const blog = await Blog.create({ ...req.body, userId: user.id })
@@ -76,21 +60,17 @@ router.post('/', tokenExtractor, async (req, res) => {
   }
 })
 
-router.delete('/:id', tokenExtractor, async (req, res) => {
+router.delete('/:id', blogFinder, async (req, res) => {
+  if (!req.blog) {
+    return res.status(401).json({ error: 'Blog doesnt exists' })
+  }
   const user = await User.findByPk(req.decodedToken.id)
 
-  const blogToBeDeleted = await Blog.findByPk(req.body.id, {
-    include: {
-      model: Blog,
-    },
-  })
-
-  if (!blogToBeDeleted) res.json('no blog found')
-
-  if (user.toString() === blogToBeDeleted.user.toString()) {
-    await blogToBeDeleted.destroy()
-    res.json('deleted blog')
+  if (user.username.toString() === req.blog.user.username.toString()) {
+    await req.blog.destroy()
+    return res.json(`Blog deleted`)
   }
+  return res.json({ error: `Unauthorized request` })
 })
 
 module.exports = router

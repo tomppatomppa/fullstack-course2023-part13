@@ -1,22 +1,6 @@
 const router = require('express').Router()
 
-const { SECRET } = require('../util/config')
-const jwt = require('jsonwebtoken')
 const { Blog, User, ReadingList } = require('../models')
-
-const tokenExtractor = (req, res, next) => {
-  const authorization = req.get('authorization')
-  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    try {
-      req.decodedToken = jwt.verify(authorization.substring(7), SECRET)
-    } catch {
-      return res.status(401).json({ error: 'token invalid' })
-    }
-  } else {
-    return res.status(401).json({ error: 'token missing' })
-  }
-  next()
-}
 
 router.get('/', async (req, res) => {
   const allLists = await ReadingList.findAll({
@@ -27,7 +11,8 @@ router.get('/', async (req, res) => {
   return res.json(allLists)
 })
 
-router.put('/:id', tokenExtractor, async (req, res) => {
+router.put('/:id', async (req, res) => {
+  console.log(req.params)
   const readingListItem = await ReadingList.findOne({
     where: { blogId: req.params.id },
   })
@@ -46,7 +31,7 @@ router.put('/:id', tokenExtractor, async (req, res) => {
 
   return res.json({ error: 'No permission to modify' })
 })
-router.post('/', tokenExtractor, async (req, res) => {
+router.post('/', async (req, res) => {
   const user = await User.findByPk(req.decodedToken.id)
   const blog = await Blog.findByPk(req.body.blogId)
   if (user && blog) {
